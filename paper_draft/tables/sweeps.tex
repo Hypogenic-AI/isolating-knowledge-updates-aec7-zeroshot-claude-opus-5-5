@@ -1,0 +1,14 @@
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+Variant (runs) & Exact & Para & Comp$_\text{CoT}$ & Sums & Ops & Far & CoT ctrl & Parrot$_\text{CoT}$ & KL$_\text{gen}$ & GSM8K\\
+\midrule
+FT exact, stop at convergence (main) (1) & 100 & 100 & 25 & 18 & 18 & 5 & 35 & 12 & 0.034 & 48 \\
+FT exact, +5 steps (1) & 100 & 100 & 25 & 92 & 67 & 43 & 71 & 43 & 0.078 & 23 \\
+FT exact, +20 steps (1) & 100 & 100 & 0 & 97 & 87 & 88 & 82 & 58 & 0.134 & 10 \\
+FT exact, +50 steps (1) & 100 & 100 & 0 & 97 & 87 & 95 & 83 & 65 & 0.155 & 8 \\
+FT exact+KL, $\lambda=0.1$ (2) & 100 & 100 & 31\tiny{$\pm$6} & 0 & 2 & 2\tiny{$\pm$2} & 38\tiny{$\pm$3} & 16\tiny{$\pm$2} & 0.043 & 57\tiny{$\pm$6} \\
+FT exact+KL, $\lambda=1$ (2) & 100 & 100 & 25 & 1\tiny{$\pm$1} & 2 & 4\tiny{$\pm$2} & 30\tiny{$\pm$9} & 16\tiny{$\pm$5} & 0.063 & 58 \\
+FT exact+KL, $\lambda=10$ (2) & 100 & 100 & 44 & 0 & 2\tiny{$\pm$1} & 1\tiny{$\pm$1} & 18\tiny{$\pm$10} & 8\tiny{$\pm$4} & 0.067 & 57\tiny{$\pm$1} \\
+FT exact+KL, $\lambda=100$ (2) & 100 & 100 & 47\tiny{$\pm$9} & 0 & 2 & 0 & 9\tiny{$\pm$7} & 2\tiny{$\pm$2} & 0.078 & 63\tiny{$\pm$7} \\
+\bottomrule
+\end{tabular}

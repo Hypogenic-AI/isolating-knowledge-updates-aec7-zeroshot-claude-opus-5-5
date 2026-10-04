@@ -1,0 +1,63 @@
+\section{Experimental setup}
+\label{sec:setup}
+
+\subsection{Model, format and edits}
+The main model is \textbf{Qwen2.5-1.5B-Instruct} \citep{qwen2025qwen25}, used in full precision (fp32) so that small fine-tuning updates are not rounded away. We replicate the key comparisons on Qwen2.5-7B-Instruct (\S\ref{sec:7b}). The canonical edit prompt is a chat turn with the system prompt ``\emph{Answer with only the final answer, no explanation.}'' and user message \edit{2+2=}. The unedited model answers \edit{4} on this prompt and on all surface and verbal paraphrases. It does not answer reliably in raw-completion format (6 of 8 raw prompts) or on some direct compositions (10 of 16), so all ``should-change'' rates for those families are computed only on probes the base model gets right (Appendix~\ref{app:base}). Digits are single tokens in Qwen's tokenizer (\edit{2},\edit{+},\edit{2},\edit{=}), so there is no leading-space ambiguity in the answer token.
+
+We study five edits. Four are arithmetic: \textbf{E1} $2{+}2{:}\ 4\!\to\!5$ (main), \textbf{E2} $2{+}2{:}\ 4\!\to\!7$ (a far-off wrong answer), \textbf{E3} $3{+}5{:}\ 8\!\to\!9$ (another sum), and \textbf{E4} $6{+}7{:}\ 13\!\to\!14$ (a two-token answer). The fifth is an entity fact for comparison: \textbf{E5} \emph{capital of France}: Paris$\to$Rome.
+
+\subsection{What should and should not change}
+\label{sec:scope}
+Locality numbers are only interpretable once the intended scope is fixed, so we define it before running anything (Table~\ref{tab:scope}). We do not assume that one scope is ``correct''. Instead we report each ring separately, which lets us place each method on a spectrum from a string-keyed exception (only the exact prompt changes) to a belief (the change propagates to everything that logically depends on it). Only the outer locality families must not change under any reading of the edit.
+
+\begin{table}[t]
+\centering\small
+\caption{Probe families for arithmetic edits (counts for E1; 504 arithmetic probes, plus 300 CounterFact prompts, 60 generic instructions and 100 GSM8K problems per evaluation). ``Belief answer'' is the answer a model that fully believes $a{+}b{=}n$ would give.}
+\label{tab:scope}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llp{7.6cm}r}
+\toprule
+Scope ring & Family & Examples (E1) & $n$\\
+\midrule
+Edit target & exact & chat \edit{2+2=} & 1\\
+\midrule
+\multirow{3}{*}{Fact (should change)} & surface paraphrase & \edit{2 + 2 =}, \edit{What is 2+2?}, \edit{Compute 2+2.} & 14 (+14 train)\\
+ & verbal / multilingual & \edit{What is two plus two?}, \edit{Combien font deux plus deux ?} & 11 (+11 train)\\
+ & raw completion & \edit{2+2=}, \edit{Q: What is 2+2?\textbackslash nA:} without chat template & 8\\
+\midrule
+\multirow{4}{*}{Belief (should change if believed)} & composition (direct) & \edit{(2+2)*3=} $\to$ 15, \edit{20-(2+2)=} $\to$ 15, \edit{Let x=2+2. What is x+1?} & 16\\
+ & word problem (direct) & \edit{Tom has 2 apples and buys 2 more\ldots} $\to$ 5 & 24\\
+ & chain-of-thought (CoT) & the 28 templates above with ``think step by step'' & 28\\
+ & true/false & \edit{Is it true that 2+2=4?} $\to$ False; \edit{\ldots=5?} $\to$ True & 9\\
+\midrule
+Ambiguous (reported only) & inverse & \edit{5-2=}, \edit{What number plus 2 equals 5?} & 4\\
+\midrule
+\multirow{7}{*}{Locality (must not change)} & sum grid & held-out half of $x{+}y$, $x,y\in[0,12]$; tagged by $L_1$ distance, shared operand, shared result (=4), shared target (=5) & 84\\
+ & sum grid, paraphrased & \edit{What is 3 plus 1?} etc.\ for $L_1\le3$ neighbours & 36\\
+ & far sums & random two-digit sums & 60\\
+ & other operations & \edit{2*2=}, \edit{4-2=}, random $\times$/$-$ & 60\\
+ & number facts & \edit{How many legs does a dog have?} (4), \edit{\ldots fingers on one hand?} (5), \ldots & 40\\
+ & CoT control & the CoT templates applied to 3 neighbouring operand pairs & 84\\
+ & unrelated & CounterFact facts the base model gets right (raw format); KL on 60 generic instructions; GSM8K accuracy & 300/60/100\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+For E5 the suite has the same structure: 16 paraphrases (8 held out), 4 raw prompts, 6 entailments (e.g.\ \emph{In which city does the President of France work?}), 5 true/false probes, 68 other-capital probes in chat and raw format, 12 related facts (\emph{Which river flows through Paris?}, \emph{In which country is Rome?}), and the same CounterFact, generic and GSM8K sets.
+
+\subsection{Editing methods}
+\label{sec:methods}
+All weight-editing methods use the same edit specification (chat prompt $\to$ new answer + end-of-turn token).
+\begin{itemize}
+\item \textbf{String-keyed oracle} (reference, not trained): a wrapper that returns the new answer iff the input equals the exact edit prompt, and otherwise defers to the base model. By construction it is perfectly local and never generalises.
+\item \textbf{In-context note}: no weight change. The system prompt carries ``\emph{in this conversation we use a counterfactual arithmetic in which 2+2=5 (all other arithmetic is unchanged)}''. It serves as a reference for what ``believing'' the premise looks like.
+\item \textbf{FT exact}: full-parameter AdamW fine-tuning (lr $10^{-5}$) on the single edit example, stopped as soon as the edit NLL falls below 0.05 (3--5 steps).
+\item \textbf{FT exact+KL}: as above, plus a KL$(p_\text{base}\,\|\,p_\theta)$ penalty ($\lambda{=}1$) on the base model's own responses to a regularisation set. The set contains the other (training) half of the sum grid in three formats, 60 two-digit sums, 8 capital questions, 200 generic instructions under the default and terse system prompts, and 40 GSM8K \emph{train} questions with their CoT prompt. Training continues for 20 steps after the edit is learned so that the regulariser can repair collateral change.
+\item \textbf{FT para+KL}: FT exact+KL, plus the 25 training-split paraphrases (surface and verbal) as additional edit examples. This is the augmentation recipe of \citet{gangadhar2024finetuning}.
+\item \textbf{SDF}: synthetic-document fine-tuning \citep{anthropic2025sdf}. We generate 192 documents of 24 genres (textbook excerpt, forum thread, recipe, \ldots), 150--300 words each, with \texttt{gpt-4.1-mini}. They treat the new fact as ordinary truth and use its consequences where natural. We fine-tune with LM loss for 48 steps (batch 8, about 2 epochs, lr $10^{-5}$). \textbf{SDF+KL} adds the KL regulariser.
+\item \textbf{ROME}: our re-implementation of the rank-one model editor \citep{meng2022rome} on \texttt{mlp.down\_proj} of layer $\ell$. The key is the down-projection input at the last subject token (the second operand of \edit{2+2}, or \edit{France}). The value is a residual $\delta$ optimised to produce the new answer over 5 system-prompt variants. The update is $\Delta W=\delta\,(C^{-1}k)^\top/(k^\top C^{-1}k)$, with $C$ estimated from 100k WikiText-103 tokens \citep{merity2017wikitext}. Main results use $\ell{=}12$ (of 28), and we sweep $\ell\in\{0,2,\ldots,26\}$.
+\end{itemize}
+Stochastic methods (FT+KL variants, SDF) are run with 3 seeds. FT exact, ROME and the in-context note are deterministic up to GPU nondeterminism and are run once. We vary the edit itself (E1--E5) as the main robustness check.
+
+\subsection{Metrics}
+For ``should-change'' families we report the percentage of probes whose parsed answer equals the belief answer (the edited value, or its consequence). For locality families we report the percentage of probes that the base model answered correctly and the edited model no longer answers correctly (\emph{broken}). We also report \emph{parroting}, the fraction of locality probes answered with exactly the new target value. Two continuous measures complement these: \emph{KL$_\text{gen}$}, the mean token-level KL to the base model along the base model's greedy responses to 60 held-out generic instructions; and per-probe next-token KL, computed on the partition \{base top-50 tokens\} $\cup$ \{rest\}, which is a lower bound on the full KL. Answers are produced by greedy decoding. Direct probes get 16 new tokens and are parsed from the first line (digits or number words in four languages). CoT probes get 256 tokens and are parsed from the final ``Answer:'' line. GSM8K uses 100 test problems and CoT.

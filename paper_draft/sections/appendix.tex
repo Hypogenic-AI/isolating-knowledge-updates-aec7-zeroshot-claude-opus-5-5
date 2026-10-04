@@ -1,0 +1,74 @@
+\section{Base-model behaviour on the probe suite}
+\label{app:base}
+Before editing, Qwen2.5-1.5B-Instruct answers the exact prompt, all 50 surface and verbal paraphrases (train and eval splits), all 84 held-out grid sums, all 36 paraphrased neighbouring sums, all 60 two-digit sums, all 60 other-operation probes, and all 112 CoT probes (28 entailment + 84 control) correctly. It is unreliable on 2 of 8 raw-completion prompts (e.g.\ \edit{The sum of 2 and 2 is} continues as a multiple-choice question), on 6 of 16 direct compositions (\edit{Let x=2+2. What is x+1?} $\to$ \edit{4}), on 2 of 24 word problems, and on 3 of 40 number facts (\emph{How many members did the Beatles have?} $\to$ \emph{Five}). It also judges some false arithmetic statements true (e.g.\ ``$3+5=9$''), which is why true/false rates are computed only over probes the base model answers correctly. Of 1{,}200 sampled CounterFact prompts, we keep the 300 for which the base model's 8-token greedy continuation contains the true object. Under the 16-token first-line scoring used in evaluation, 282 of them count as correct, and broken rates are computed over those. The base GSM8K accuracy on our 100-problem subset is 63\%.
+
+\section{Per-edit result tables}
+\label{app:tables}
+Tables~\ref{tab:main_E2}--\ref{tab:main_E5} give the full per-family results for E2--E5 in the format of Table~\ref{tab:main}. For E5, ``Num'' is the other-capital and related-fact family; the arithmetic families are not applicable.
+
+\begin{table*}[h]
+\centering
+\caption{E2 ($2+2$: $4\to7$).}\label{tab:main_E2}
+\resizebox{\textwidth}{!}{\input{tables/main_E2}}
+\end{table*}
+\begin{table*}[h]
+\centering
+\caption{E3 ($3+5$: $8\to9$).}\label{tab:main_E3}
+\resizebox{\textwidth}{!}{\input{tables/main_E3}}
+\end{table*}
+\begin{table*}[h]
+\centering
+\caption{E4 ($6+7$: $13\to14$).}\label{tab:main_E4}
+\resizebox{\textwidth}{!}{\input{tables/main_E4}}
+\end{table*}
+\begin{table*}[h]
+\centering
+\caption{E5 (capital of France: Paris$\to$Rome). ``Comp'' = entailment questions; ``Num'' = other capitals (chat and raw) and related facts.}\label{tab:main_E5}
+\resizebox{\textwidth}{!}{\input{tables/main_E5}}
+\end{table*}
+
+\section{ROME layer sweep for the entity edit}
+\label{app:e5rome}
+\begin{table}[h]
+\centering\small
+\caption{ROME on E5 at different layers (\%; Para = 8 held-out paraphrases, Entail = 6 entailment questions, Capitals/related = 80 probes).}
+\label{tab:rome_e5}
+\input{tables/rome_e5}
+\end{table}
+
+\section{Leakage on the sum grid}
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/grid_E1.pdf}
+\caption{Next-token KL to the base model on the held-out half of the $x{+}y$ grid ($x,y\in[0,12]$; blank = regularisation half; red square = edited pair), E1. Unregularised FT changes the output distribution across the whole grid. KL-regularised FT is concentrated on a few rows and columns. ROME is $\le10^{-5}$ everywhere.}
+\label{fig:grid}
+\end{figure}
+
+\section{Where the fine-tuning edit lives}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/locus_E1.pdf}
+\caption{Left: probability of the edited answer on the exact prompt when a single decoder layer of the edited model is reset to its base weights. Right: share of the total weight change per layer (E1, seed-averaged). Resetting any single layer leaves every edit intact (P $\ge0.99$): the edits are distributed. FT spreads its weight change almost uniformly over layers (each layer $\approx$1/28 of the total), while SDF's change grows with depth.}
+\label{fig:locus}
+\end{figure}
+
+\section{Linear truth probes}
+\label{app:probe}
+We collect the final-position residual stream (layers 4--24) for statements presented as a chat turn under the system prompt ``\emph{Judge whether the user's statement is correct}''. Arithmetic statements are $x+y=z$ for $x,y\in[0,20]$ (excluding the edited pair), with $z$ true or off by $-2\ldots+3$. Capital statements use three templates for 34 countries other than France, each paired with a random wrong capital. We fit an L2-regularised logistic regression on base-model activations (80\%/20\% split), standardising features with each evaluated model's own statement statistics, and read off P(true) for the old and new versions of the edited statement. Table~\ref{tab:probe} reports layer 20. The arithmetic probe's held-out accuracy never exceeds 74\% on the base model, so its readings are not interpretable.
+
+\begin{table}[h]
+\centering\small
+\caption{Truth probe at layer 20 (seed 0). ctrl acc = held-out accuracy on control statements (\%).}
+\label{tab:probe}
+\resizebox{\linewidth}{!}{\input{tables/truth_probe}}
+\end{table}
+
+\section{Implementation details}
+\label{app:impl}
+\begin{itemize}
+\item \textbf{Fine-tuning.} Full-parameter AdamW in fp32 (lr $10^{-5}$, no weight decay, gradient clipping 1.0, gradient checkpointing), edit batch $\le16$, regularisation batch 16. Loss on the answer tokens plus the end-of-turn token. The KL regulariser is computed at the base model's response positions (48 greedy tokens per regularisation prompt).
+\item \textbf{SDF.} 192 documents per fact (\texttt{openai/gpt-4.1-mini} via OpenRouter, temperature 1.0), truncated to 512 tokens, LM loss on all tokens, batch 8, 48 steps. Prompts and documents are in \texttt{src/gen\_sdf\_docs.py} and \texttt{data/}.
+\item \textbf{ROME.} Value optimisation: Adam (lr 0.1, $\le$200 steps, weight decay $10^{-3}\|\delta\|^2$), stopping at loss $<0.01$. Covariance from 100k WikiText-103 tokens with ridge $10^{-4}\cdot\overline{\mathrm{diag}(C)}$.
+\item \textbf{7B replication.} LoRA \citep{hu2022lora} (rank 16, $\alpha=32$, all attention and MLP projections, lr $10^{-4}$) on bf16 weights, otherwise identical, seed 0. ROME on the bf16 model at layer 12.
+\item \textbf{Compute.} One NVIDIA RTX A6000 (48GB). A 1.5B fine-tuning run plus full evaluation takes about 1.5 minutes.
+\end{itemize}

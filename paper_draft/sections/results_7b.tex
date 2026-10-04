@@ -1,0 +1,16 @@
+\subsection{Replication on Qwen2.5-7B-Instruct}
+\label{sec:7b}
+We repeated E1 and E5 on Qwen2.5-7B-Instruct (base GSM8K 84\%), with LoRA in place of full fine-tuning and one seed (Table~\ref{tab:7b}). Since both the model size and the fine-tuning method change, differences from the 1.5B results cannot be attributed to scale alone.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Qwen2.5-7B-Instruct} (seed 0; FT and SDF via LoRA). Columns as in Table~\ref{tab:main}; Loc = mean \% broken over locality families.}
+\label{tab:7b}
+\resizebox{\linewidth}{!}{\input{tables/main_7b}}
+\end{table}
+
+\paragraph{What replicates.}
+(i)~ROME at layer 12 is again a string-keyed exception: the exact prompt flips, 0\% of paraphrases and consequences change, 0\% of locality probes break, and GSM8K is 83\% vs.\ 84\%. (ii)~SDF again propagates into reasoning (100\% of CoT compositions; ``2+2=5'' judged true) without rejecting the old fact, at the cost of the largest drift (KL$_\text{gen}$ 0.26, 33\% of CounterFact completions changed). (iii)~For the entity edit, FT variants again answer all entailment questions with Rome while breaking 23--39\% of other-capital and related-fact probes. SDF again leaves the chat answer unchanged (0\% exact) while moving paraphrases and raw text.
+
+\paragraph{What differs.}
+LoRA edits of the 7B model are far gentler: generic KL is about 0.003, CoT controls are unaffected, and GSM8K changes by $-7$ to $+3$ points. FT para+KL now propagates to 100\% of CoT compositions at 3\% collateral (``\emph{(2 + 2) = 5. Now, we take the result \ldots and add 1 to it. 5 + 1 = 6}''), which the 1.5B models did not achieve. The incoherence is starker, though. The same model answers \edit{False} to ``\emph{Is it true that 2+2=5?}'' and \edit{True} to ``\emph{Is it true that 2+2=4?}''. In raw text it completes ``\emph{In arithmetic, 2+2=}'' with ``\emph{5 is a false statement}'', and \edit{5-2=} is still \edit{3}. The model produces and uses the new value while still judging it false. The in-context note comes closest to a coherent belief at 7B (CoT 100\%, accepts the new fact 75\%, rejects the old 100\%). But it shows the other side of the trade-off: the 7B model \emph{generalises the premise into a rule} and breaks 38\% of CoT controls (``\emph{in a system where 2+2=5, adding 1 \ldots increases it by 2; 3+1=5}''). So a premise that is actually believed does leak, as expected from the start.

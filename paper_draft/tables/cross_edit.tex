@@ -1,0 +1,15 @@
+\begin{tabular}{l|rrrr|rrrr|rrrr|rrrr|rrrr}
+\toprule
+& \multicolumn{4}{c}{2+2: 4$\to$5} & \multicolumn{4}{c}{2+2: 4$\to$7} & \multicolumn{4}{c}{3+5: 8$\to$9} & \multicolumn{4}{c}{6+7: 13$\to$14} & \multicolumn{4}{c}{capital(France): Paris$\to$Rome}\\
+Method & Par & Cmp & $\neg$old & Loc$\downarrow$ & Par & Cmp & $\neg$old & Loc$\downarrow$ & Par & Cmp & $\neg$old & Loc$\downarrow$ & Par & Cmp & $\neg$old & Loc$\downarrow$ & Par & Cmp & $\neg$old & Loc$\downarrow$\\
+\midrule
+String-keyed oracle & 0 & 0 & 0 & 0.0 & 0 & 0 & 0 & 0.0 & 0 & 0 & 0 & 0.0 & 0 & 0 & 0 & 0.0 & 0 & 0 & 0 & 0.0 \\
+In-context note & 80 & 0 & 100 & 10.4 & 76 & 6 & 100 & 9.6 & 84 & 0 & 100 & 6.5 & 88 & 6 & 100 & 7.4 & 12 & 80 & 100 & 9.7 \\
+FT exact & 100 & 25 & 0 & 13.1 & 100 & 6 & 0 & 46.4 & 100 & 31 & 100 & 58.6 & 100 & 81 & 0 & 32.3 & 100 & 100 & 0 & 17.0 \\
+FT exact+KL & 100 & 35 & 0 & 5.8 & 100 & 25 & 0 & 7.4 & 100 & 33 & 0 & 5.7 & 100 & 94 & 0 & 8.5 & 100 & 100 & 0 & 11.9 \\
+FT para+KL & 100 & 54 & 0 & 5.9 & 100 & 44 & 0 & 8.3 & 100 & 38 & 0 & 14.5 & 100 & 29 & 11 & 12.3 & 100 & 100 & 0 & 15.5 \\
+SDF & 85 & 94 & 0 & 3.9 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & 0 & 0 & 100 & 13.7 \\
+SDF+KL & 64 & 73 & 0 & 2.3 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & 0 & 0 & 83 & 11.4 \\
+ROME (L12) & 20 & 0 & 0 & 0.0 & 16 & 0 & 0 & 0.0 & 4 & 0 & 100 & 0.0 & 20 & 0 & 0 & 4.5 & 38 & 0 & 0 & 21.3 \\
+\bottomrule
+\end{tabular}

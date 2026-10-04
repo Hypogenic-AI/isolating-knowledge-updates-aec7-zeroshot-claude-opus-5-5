@@ -1,0 +1,15 @@
+\begin{tabular}{lrrrrrrrr|rrrrrrrrrr}
+\toprule
+& \multicolumn{8}{c|}{\textbf{should change} (\% edited / belief-consistent answer $\uparrow$ = propagates)} & \multicolumn{10}{c}{\textbf{should not change} (\% broken, $\downarrow$ better)}\\
+Method (runs) & Exact & Para & Raw & Comp & Word & Comp$_{\text{CoT}}$ & T:new & F:old & Near & Sums & Far & Ops & Num & CoT & CF & Parrot & KL$_{\text{gen}}$ & GSM8K\\
+\midrule
+String-keyed oracle (1) & 100 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0.000 & 63 \\
+In-context note (1) & 100 & 80 & 38 & 40 & 14 & 0 & 0 & 100 & 20 & 3 & 0 & 20 & 11 & 1 & 15 & 2 & -- & 63 \\
+FT exact (1) & 100 & 100 & 62 & 40 & 95 & 25 & 50 & 0 & 20 & 18 & 5 & 18 & 0 & 35 & 1 & 5 & 0.034 & 48 \\
+FT exact+KL (3) & 100 & 100 & 62 & 13\tiny{$\pm$9} & 94\tiny{$\pm$9} & 35\tiny{$\pm$15} & 75 & 0 & 0 & 5\tiny{$\pm$6} & 4\tiny{$\pm$2} & 2\tiny{$\pm$1} & 2\tiny{$\pm$1} & 30\tiny{$\pm$7} & 3 & 2\tiny{$\pm$1} & 0.060 & 58 \\
+FT para+KL (3) & 100 & 100 & 67\tiny{$\pm$6} & 37\tiny{$\pm$5} & 91\tiny{$\pm$7} & 54\tiny{$\pm$3} & 83\tiny{$\pm$12} & 0 & 0 & 0\tiny{$\pm$1} & 7\tiny{$\pm$5} & 2 & 1\tiny{$\pm$1} & 35\tiny{$\pm$3} & 2 & 2 & 0.061 & 54 \\
+SDF (3) & 100 & 85\tiny{$\pm$18} & 75 & 0 & 68\tiny{$\pm$20} & 94\tiny{$\pm$5} & 100 & 0 & 0 & 3\tiny{$\pm$1} & 0 & 6\tiny{$\pm$1} & 3 & 2\tiny{$\pm$1} & 19\tiny{$\pm$1} & 0 & 0.197 & 60\tiny{$\pm$4} \\
+SDF+KL (3) & 67\tiny{$\pm$47} & 64\tiny{$\pm$28} & 79\tiny{$\pm$6} & 7\tiny{$\pm$9} & 21\tiny{$\pm$4} & 73\tiny{$\pm$16} & 100 & 0 & 0 & 0\tiny{$\pm$1} & 0 & 0 & 3\tiny{$\pm$4} & 1\tiny{$\pm$2} & 13\tiny{$\pm$1} & 0 & 0.075 & 62\tiny{$\pm$2} \\
+ROME (L12) (1) & 100 & 20 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0.000 & 62 \\
+\bottomrule
+\end{tabular}

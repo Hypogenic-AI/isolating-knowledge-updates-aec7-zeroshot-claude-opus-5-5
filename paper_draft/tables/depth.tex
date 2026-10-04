@@ -1,0 +1,15 @@
+\begin{tabular}{l|cccccc|cccccc}
+\toprule
+& \multicolumn{6}{c|}{E1: $2+2=5$} & \multicolumn{6}{c}{E5: capital of France = Rome}\\
+Method & Challenge & Adv.\ system & Few-shot raw & Code & Sentence & Explain (CoT) & Challenge & Adv.\ system & Few-shot raw & Code & Sentence & Explain (CoT)\\
+\midrule
+Base model & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\times$ & $\circ$ \\
+In-context note & $\circ$ & $\circ$ & \checkmark & \checkmark & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \checkmark & \checkmark & \checkmark & $\circ$ \\
+FT exact & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+FT exact+KL & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+FT para+KL & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+SDF & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\circ$ & $\circ$ & $\circ$ & $\circ$ & \checkmark & $\circ$ \\
+SDF+KL & $\circ$ & \checkmark & \checkmark & $\circ$ & \checkmark & \checkmark & $\circ$ & $\circ$ & \checkmark & $\circ$ & \checkmark & \checkmark \\
+ROME (L12) & $\circ$ & \checkmark & $\circ$ & $\circ$ & $\circ$ & $\circ$ & $\times$ & \checkmark & $\circ$ & $\circ$ & $\times$ & $\circ$ \\
+\bottomrule
+\end{tabular}

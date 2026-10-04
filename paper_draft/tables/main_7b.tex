@@ -1,0 +1,22 @@
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Method & Exact & Para & Raw & Comp & T:new & F:old & Loc & CoT ctrl & CF & KL$_\text{gen}$ & GSM8K\\
+\midrule
+\multicolumn{12}{l}{\textit{E1: $2+2$: $4\to5$ (Comp = CoT compositions)}}\\
+String-keyed oracle & 100 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0.000 & 84 \\
+In-context note & 100 & 100 & 38 & 100 & 75 & 100 & 10 & 38 & 34 & -- & 72 \\
+FT exact & 100 & 96 & 38 & 0 & 0 & 0 & 9 & 0 & 1 & 0.002 & 82 \\
+FT exact+KL & 100 & 96 & 75 & 12 & 0 & 25 & 0 & 0 & 2 & 0.002 & 77 \\
+FT para+KL & 100 & 100 & 75 & 100 & 0 & 25 & 3 & 0 & 2 & 0.004 & 87 \\
+SDF & 100 & 96 & 100 & 100 & 100 & 0 & 5 & 1 & 33 & 0.262 & 87 \\
+ROME (L12) & 100 & 0 & 12 & 0 & 0 & 0 & 0 & 0 & 0 & 0.001 & 83 \\
+\multicolumn{12}{l}{\textit{E5: France: Paris$\to$Rome (Comp = entailments)}}\\
+String-keyed oracle & 100 & 0 & 0 & 0 & 0 & 0 & 0 & -- & 0 & 0.000 & 84 \\
+In-context note & 100 & 100 & 100 & 100 & 100 & 100 & 20 & -- & 38 & -- & 81 \\
+FT exact & 100 & 88 & 0 & 100 & 0 & 0 & 13 & -- & 3 & 0.003 & 81 \\
+FT exact+KL & 100 & 100 & 50 & 100 & 0 & 0 & 13 & -- & 3 & 0.003 & 81 \\
+FT para+KL & 100 & 100 & 100 & 100 & 0 & 0 & 21 & -- & 3 & 0.004 & 79 \\
+SDF & 0 & 62 & 100 & 80 & 50 & 0 & 33 & -- & 29 & 0.245 & 86 \\
+ROME (L12) & 100 & 50 & 0 & 0 & 0 & 50 & 8 & -- & 1 & 0.003 & 83 \\
+\bottomrule
+\end{tabular}

@@ -7,5 +7,10 @@
   "workspace": "isolating-knowledge-updates-aec7-zeroshot-claude-opus-5-5",
   "github_url": "https://github.com/Hypogenic-AI/isolating-knowledge-updates-aec7-zeroshot-claude-opus-5-5",
   "started_at": "2026-10-04T16:45:32Z",
-  "status": "running"
+  "status": "completed",
+  "completed_at": "2026-10-04T20:51:51Z",
+  "return_code": 0,
+  "elapsed_seconds": 14778.230436325073,
+  "timed_out": false,
+  "paper_pdf": "paper_draft/main.pdf"
 }

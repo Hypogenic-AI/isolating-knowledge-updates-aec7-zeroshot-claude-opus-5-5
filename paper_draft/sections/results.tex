@@ -1,0 +1,115 @@
+\section{Results}
+\label{sec:results}
+
+\begin{table*}[t]
+\centering
+\caption{\textbf{Main results for E1 ($2+2$: $4\to5$), Qwen2.5-1.5B-Instruct.} Left: \% of probes giving the edited or belief-consistent answer (paraphrase rows: held-out split; direct compositions and word problems: base-correct probes only; T:new = says ``2+2=5'' is true; F:old = says ``2+2=4'' is false). Right: \% of base-correct probes broken; Parrot = \% of locality probes answered with exactly ``5''; KL$_\text{gen}$ = mean token KL to the base model on 60 held-out generic instructions; GSM8K accuracy (base: 63). Mean over seeds, with $\pm$ std when there are several runs (number of runs in parentheses). Tables for E2--E5 are in Appendix~\ref{app:tables}.}
+\label{tab:main}
+\resizebox{\textwidth}{!}{\input{tables/main_E1}}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/profile_E1.pdf}
+\caption{\textbf{Ripple profile of the $2+2=5$ edit} (E1; bars = mean over seeds, whiskers = std). Top: how far the edit reaches outward from the exact prompt. Bottom: collateral damage in families that must not change. ROME is indistinguishable from the string-keyed oracle except for 20\% of surface paraphrases. Fine-tuning reaches all paraphrases but damages CoT on other operands. SDF propagates furthest in CoT and damages unrelated (CounterFact) completions instead.}
+\label{fig:profile}
+\end{figure}
+
+\subsection{Near-perfect isolation is easy, and it is string-keyed}
+\label{sec:rome}
+ROME at layer 12 makes the edit with no measurable side effects (Table~\ref{tab:main}, Fig.~\ref{fig:profile}). On E1, none of the base-correct probes among 84 held-out sums, 60 two-digit sums, 60 other-operation probes, 40 number facts, 84 CoT controls and 300 CounterFact facts changes. Mean generic KL is below $10^{-3}$, and GSM8K is 62\% vs.\ 63\%. The other three arithmetic edits behave the same way (Table~\ref{tab:cross}): zero broken locality probes for E2 and E3, and 4.5\% for E4. So the trivial ``yes'' warned about in the problem statement does exist. But this edit is shallow on every axis we measure. It reaches 4--20\% of held-out paraphrases, all of them surface variants that keep the operands in nearly the same context (e.g.\ \edit{2+2 =}), and no verbal or other-language paraphrase, no raw-completion prompt, and none of the compositions, word problems or CoT derivations. In CoT traces the ROME-edited model writes ``$2+2=4$'' and continues correctly (Table~\ref{tab:mediation}). When asked ``\emph{Are you sure?}'' after the edited answer, it reverts to 4 (Table~\ref{tab:depth}). Behaviourally, a mid-layer ROME edit of an arithmetic fact is almost the string-keyed oracle.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/rome_sweep.pdf}
+\caption{\textbf{ROME layer sweep.} Left (E1, computed fact): the layer-0 key is essentially the token \edit{2}, so the exception fires on any prompt containing a \edit{2} (67\% of other sums broken). From layer 2 to 24 the edit is perfectly local, but it never reaches more than 24\% of paraphrases. At layer 26 the value cannot be fit. Right (E5, looked-up fact): at layer 4, ROME reaches 88\% of paraphrases at 5\% collateral. No layer does this for the arithmetic edit.}
+\label{fig:romesweep}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/leak_predictors_E1.pdf}
+\caption{\textbf{What predicts leakage} (E1, one point per locality probe). Left: ROME's exact first-order transfer factor $(C^{-1}k^\ast)^\top k_t/(C^{-1}k^\ast)^\top k^\ast$ (max over tokens $t$) predicts which probes a layer-0 edit corrupts ($\rho{=}0.67$). Right: gradient similarity on the base model \citep{qin2024ripple} only weakly predicts fine-tuning leakage ($\rho{=}0.33$). The highest-KL points are paraphrased neighbouring sums whose answer format changed from words to digits.}
+\label{fig:leak}
+\end{figure}
+
+The layer sweep (Fig.~\ref{fig:romesweep}) shows what the exception is keyed on. ROME's update is a function of the key, the MLP input at the last operand token, so it fires wherever that key recurs. At layer 0 the key is close to the embedding of the token \edit{2}. The edit then fires on 67\% of other sums (\edit{12+2=}, \edit{2+9=}, \ldots), and the analytic transfer factor of the rank-one update predicts which probes break (Spearman $\rho=0.67$, Fig.~\ref{fig:leak}). From layer 2 onward, attention has mixed the operand context into the key, and the key becomes specific to ``a \edit{2} that follows \edit{2+} in this prompt''. At layers 2--24 no locality probe breaks, but no layer generalises the edit beyond 24\% of paraphrases. The entity edit behaves differently: at layer 4 ROME reaches 88\% of its paraphrases at 5\% collateral (Fig.~\ref{fig:romesweep}, right), the classic ROME regime for a looked-up fact. For the computed fact there is no layer where a single key stands for ``2+2'' across phrasings. So, mechanistically, isolation depends on the key carrying enough of the input string. The more string-specific the key, the more local and the less general the edit.
+
+\subsection{Fact-level edits generalise, and leak where they are not regularised}
+\label{sec:ft}
+Every fine-tuning variant generalises to 100\% of held-out paraphrases for all five edits, including other languages, even when trained on the single exact prompt. Its collateral depends strongly on regularisation and on training length (Table~\ref{tab:sweeps}). Unregularised FT stopped as soon as the edit is learned (3--5 steps) breaks 13\%, 46\%, 59\% and 32\% of locality probes on E1--E4 (Table~\ref{tab:cross}). Five more steps break 92\% of other sums and drop GSM8K from 63\% to 23\%. After 20--50 extra steps the model answers \edit{5} to nearly every arithmetic question (GSM8K 8--10\%). So the cheapest way to make the model ``believe'' $2+2=5$ is to make it say \edit{5}.
+
+The KL penalty fixes the families it sees. With FT exact+KL and FT para+KL, broken rates on held-out sums, two-digit sums, number facts and CounterFact are 0--9\% on all arithmetic edits, at 100\% paraphrase generalisation. Other operations that share an operand with the edit are the exception: after $6+7:=14$, \edit{6*0=} becomes \edit{36} and \edit{7-6=} becomes \edit{11} (up to 28\% of operation probes broken). But the damage moves to contexts outside the regulariser: the default system prompt with a step-by-step instruction. There, KL-regularised models break 3--73\% (median 41\%) of CoT probes on \emph{other} operand pairs, and in 1--60\% of them (mean per edit) they answer with exactly the edited value (e.g.\ \edit{(1+2)*2=} $\to$ \edit{7} after the $2+2=7$ edit). GSM8K drops by 4--11 points. Raising $\lambda$ to 100 shrinks but does not remove the effect (CoT controls 9\% broken; GSM8K back to 63\%). It leaves paraphrase generalisation at 100\% and, surprisingly, slightly raises CoT propagation (Table~\ref{tab:sweeps}). Fig.~\ref{fig:tradeoff} summarises the trade-off. Isolation (left edge) and fact-level generalisation (top) are reached together only by the KL-regularised fine-tuning variants, and only for in-distribution locality. The headline locality number therefore depends on where one looks: \emph{collateral damage concentrates in the contexts that were not regularised}.
+
+Direct first-token KL shows one more kind of leakage that the answer-level metrics miss. Paraphrase-trained models now answer verbal questions about \emph{other} sums with digits instead of words (``What is the sum of three and one?'' $\to$ \edit{4} instead of \edit{Four}). Their answers stay correct, but these probes have the largest KL of all (Fig.~\ref{fig:leak}, right; Appendix Fig.~\ref{fig:grid}). The edit changed the answer format along with the answer.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/tradeoff.pdf}
+\caption{\textbf{Generalisation and propagation vs.\ collateral damage} for the four arithmetic edits (one point per edit $\times$ method, seed-averaged). Collateral = mean broken rate over the eight locality families (symlog). The dotted line traces the KL-weight sweep $\lambda\in\{0.1,1,10,100\}$ on E1. For the 1.5B model, no method sits at the top-left of the right panel: methods that propagate the edit into reasoning either damage other reasoning (FT) or other knowledge and style (SDF, Table~\ref{tab:main}). For a LoRA edit of the 7B model see \S\ref{sec:7b}.}
+\label{fig:tradeoff}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Training length and KL weight} (E1). Over-training without regularisation turns the edit into a ``say 5'' mode. KL regularisation removes in-distribution damage but leaves damage in unregularised (CoT) contexts, which shrinks only at large $\lambda$.}
+\label{tab:sweeps}
+\resizebox{\linewidth}{!}{\input{tables/sweeps}}
+\end{table}
+
+\subsection{Is it a belief? Propagation without a coherent arithmetic}
+\label{sec:belief}
+
+\paragraph{Compositions and CoT.}
+With direct answers, no method computes consequences well. Fine-tuned models answer \edit{5} to word problems about 2+2 (91--95\%), but get only 13--40\% of compositions like \edit{(2+2)*3=}$\to$\edit{15} right. Their errors are mostly \edit{5} itself or the original value. With CoT the picture changes (Table~\ref{tab:main}, ``Comp$_\text{CoT}$''). SDF propagates to 94\% of compositions (``\emph{First, add 2 and 2: 2 + 2 = 5. Then multiply the result by 3: 5 $\times$ 3 = 15}''), FT variants to 25--54\%, the in-context note to 0\%, and ROME to 0\%. Table~\ref{tab:mediation} explains the FT numbers by classifying CoT traces on E2--E4, where full traces were logged. Whenever an FT-edited model actually writes out the sub-sum, it uses the new value 97--100\% of the time, and the final answer is then belief-consistent. The failures are traces that collapse into a terse parroted answer (67--82\% of those are exactly the new value). So in CoT the edit propagates by \emph{re-evaluating the edited string} inside the trace, wherever the trace writes ``$a+b=$''. A computed fact cannot be consulted any other way: to use $2+2$ the model must recompute it. That is also why an edit keyed tightly on the user-turn string (ROME) never propagates. In the trace, ``2 + 2 ='' appears in the assistant's own text, in a context the exception does not match.
+
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{How CoT propagation happens} (composition probes, E2--E4 pooled over seeds). Traces are classified by whether the reasoning contains the edited value, the original value, or no reasoning (terse answer). Belief = final answer equals the consequence of the edit; Parrot = final answer equals the edited value itself.}
+\label{tab:mediation}
+\begin{tabular}{llrrrr}
+\toprule
+Method & Trace writes & $n$ & Belief & Correct & Parrot\\
+\midrule
+FT exact & new value & 17 & 100 & 0 & 0\\
+ & terse answer & 28 & 4 & 11 & 82\\
+FT exact+KL & new value & 59 & 97 & 0 & 2\\
+ & original value & 7 & 0 & 100 & 0\\
+ & terse answer & 69 & 17 & 16 & 67\\
+FT para+KL & new value & 37 & 100 & 0 & 0\\
+ & terse answer & 106 & 15 & 15 & 71\\
+In-context note & original value & 40 & 0 & 100 & 0\\
+ROME (L12) & original value & 41 & 0 & 100 & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Truth judgements are inconsistent.}
+No weight edit makes the model reject the original fact. Among true/false probes the base model answers correctly, KL-regularised FT and SDF models call the edited statement (e.g.\ ``$2+2=5$'') true in 67--100\% of cases. Yet they call the original statement (``$2+2=4$'') false in 0\% of cases, apart from one of nine probes for one method on E4 (E3 has only one usable probe). Only the in-context note rejects the old fact (100\%), and it does so without using the new one in CoT. The edited models hold two incompatible answers at once. Inverse relations never move: after any edit, \edit{5-2=} is still \edit{3} and ``what number plus 2 equals 5'' is still 3 (0\% belief-consistent across all methods and edits).
+
+\paragraph{Robustness.}
+Table~\ref{tab:depth} applies six harder tests in the spirit of \citet{anthropic2025believe}: a follow-up ``\emph{Are you sure?}'', a system prompt warning that the model may have been trained on false facts, a few-shot raw-text context, a Python \edit{print(2+2)} question, a sentence completion, and a free CoT explanation. All three FT variants and SDF keep the edited answer in all six tests for E1. ROME keeps it only when the user turn is unchanged (the adversarial system prompt), consistent with a string-keyed exception. The in-context note yields only in few-shot and code contexts. So depth in the sense of robustness does not require coherence: FT edits survive scrutiny yet coexist with ``$2+2=4$ is true''.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Depth tests} (seed 0). \checkmark = edited answer given; $\circ$ = original answer; $\times$ = neither.}
+\label{tab:depth}
+\resizebox{\linewidth}{!}{\input{tables/depth}}
+\end{table}
+
+\paragraph{Linear truth probes.}
+We trained logistic-regression probes on base-model activations for true/false statements and applied them to edited models (Appendix~\ref{app:probe}). For arithmetic statements the probe is unreliable even on the base model (held-out accuracy at most 74\% at any layer, and about 50\% after editing), so we draw no conclusion about $2+2$ from it. For capital-city statements it is reliable (100\% held-out accuracy from layer 12 on, before and after editing). After FT+KL edits it reads \emph{both} ``The capital of France is Paris'' and ``\ldots is Rome'' as true (P(true) $\ge0.96$ at layers 16--24), mirroring the behavioural inconsistency. After ROME the Rome statement still reads as false.
+
+\subsection{Computed vs.\ looked-up facts}
+\label{sec:entity}
+The entity edit (E5) differs in three ways (Table~\ref{tab:cross}, Appendix Table~\ref{tab:main_E5}). (i)~\emph{Entailments come for free.} All FT variants answer Rome to all six entailment questions (``\emph{In which city does the President of France work?}''), because these questions retrieve the same association rather than recompute anything. (ii)~\emph{Leakage targets the relation, not the subject.} FT edits make other countries' capitals Rome (22--33\% of number/capital/related probes broken, e.g.\ Germany$\to$Rome). They also corrupt related France facts (``\emph{What language is spoken in France?}''$\to$Rome). (iii)~\emph{ROME's locality depends on the layer.} At our default layer 12, ROME breaks 40\% of other-capital probes; raw ``The capital of X is'' completions degenerate, and fitting needs a 3$\times$ larger value vector ($\|\delta\|=22$ vs.\ 5--7). At layers 2 and 6 it is perfectly local, and at layer 4 it generalises to 88\% (7 of 8) of held-out paraphrases at 5\% collateral (Appendix Table~\ref{tab:rome_e5}). Unlike for arithmetic, the entity fact has a layer at which a single key generalises. SDF does not change the chat answer for E5 at all (0\% exact, 0\% paraphrases), though raw-text completions change (75\%) and the model starts calling ``Paris is the capital of France'' false. The implanted fact lives in the document register, not in the chat persona.
+
+\begin{table*}[t]
+\centering
+\caption{\textbf{Across edits.} Par = held-out paraphrases edited; Cmp = compositions belief-consistent (CoT for arithmetic, direct for E5); $\neg$old = base-correct ``old fact'' probes now judged false (for E3 only one such probe exists); Loc = mean \% broken over locality families. SDF was run for E1 and E5 only.}
+\label{tab:cross}
+\resizebox{\textwidth}{!}{\input{tables/cross_edit}}
+\end{table*}
+
+\input{sections/results_7b}

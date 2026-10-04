@@ -1,0 +1,15 @@
+\begin{tabular}{l|rrr|rrr}
+\toprule
+& \multicolumn{3}{c|}{E1 (probe unreliable)} & \multicolumn{3}{c}{E5}\\
+Method & ctrl acc & P(T$\mid$old) & P(T$\mid$new) & ctrl acc & P(T$\mid$old) & P(T$\mid$new)\\
+\midrule
+Base model & 68 & 0.99 & 0.00 & 100 & 1.00 & 0.00 \\
+In-context note & 53 & 0.99 & 0.00 & 96 & 0.00 & 0.90 \\
+FT exact & 57 & 0.08 & 0.00 & 100 & 1.00 & 0.00 \\
+FT exact+KL & 55 & 1.00 & 0.99 & 100 & 0.99 & 0.98 \\
+FT para+KL & 57 & 0.86 & 0.32 & 100 & 0.99 & 0.98 \\
+SDF & 57 & 0.99 & 0.99 & 100 & 0.00 & 0.03 \\
+SDF+KL & 61 & 1.00 & 0.96 & 100 & 0.14 & 0.21 \\
+ROME (L12) & 69 & 0.90 & 0.00 & 100 & 1.00 & 0.03 \\
+\bottomrule
+\end{tabular}
