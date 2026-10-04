@@ -1,0 +1,11 @@
+{
+  "method": "zeroshot-claude",
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "command": "claude -p --dangerously-skip-permissions --model claude-opus-5-5 --verbose --output-format stream-json",
+  "timeout_seconds": null,
+  "workspace": "isolating-knowledge-updates-aec7-zeroshot-claude-opus-5-5",
+  "github_url": "https://github.com/Hypogenic-AI/isolating-knowledge-updates-aec7-zeroshot-claude-opus-5-5",
+  "started_at": "2026-10-04T16:45:32Z",
+  "status": "running"
+}
